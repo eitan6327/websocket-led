@@ -79,14 +79,14 @@ AsyncWebSocket ws("/ws");
 void notifyClients()
 {
   // ws.textAll(led.on ? "on" : "off");
- 
+
   const uint8_t size = JSON_OBJECT_SIZE(1);
   StaticJsonDocument<size> json;
   json["status"] = led.on ? "on" : "off";
-  
+
   char data[17];
   size_t len = serializeJson(json, data);
-  
+
   ws.textAll(data, len);
 }
 
@@ -104,17 +104,39 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
     const uint8_t size = JSON_OBJECT_SIZE(1);
     StaticJsonDocument<size> json;
-    DeserializationError err =deserializeJson(json, data);
-    if (err) {
+    DeserializationError err = deserializeJson(json, data);
+    if (err)
+    {
       Serial.print(F("deserializeJson() failed with code "));
       Serial.println(err.c_str());
       return;
     }
 
-    const char *action = json["action"];
-    if (strcmp(action, "toggle") == 0) {
-      led.on = !led.on;
-      notifyClients();
+    if (json.containsKey("action"))
+    {
+      const char *action = json["action"];
+      Serial.println(action);
+      if (strcmp(action, "toggle") == 0)
+      {
+        led.on = !led.on;
+        notifyClients();
+      }
+    }
+    if (json.containsKey("connection"))
+    {
+      const char *connection = json["connection"];
+      if (strcmp(connection, "ping") == 0)
+      {
+        // const uint8_t size = JSON_OBJECT_SIZE(1);
+        // StaticJsonDocument<size> json;
+        // json["connection"] = "pong";
+
+        // char data[17];
+        // size_t len = serializeJson(json, data);
+
+        // ws.textAll(data, len);
+        Serial.println("ping request");
+      }
     }
   }
 }
@@ -207,6 +229,7 @@ void initSPIFFS()
 void setup()
 {
   Serial.begin(115200);
+  delay(500);
   // put your setup code here, to run once:
   pinMode(onboard_led.pin, OUTPUT);
   pinMode(led.pin, OUTPUT);
