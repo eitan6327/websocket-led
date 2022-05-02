@@ -64,14 +64,12 @@ var start_time;
 function onMessage(event) {
     let data = JSON.parse(event.data);
     let keys = Object.keys(data);
-    console.log("keys: ", keys);
     if (keys.includes('status')) {
         document.getElementById('led').className = data.status;
     }
     if (keys.includes('connection')) {
-        console.log('pong');
         var latency = (new Date).getTime() - start_time;
-        console.log(latency);
+        document.getElementById('ping-pong').innerHTML = latency;
     }
     
 }

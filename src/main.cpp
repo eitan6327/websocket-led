@@ -15,6 +15,8 @@ const uint8_t DEBOUNCE_DELAY = 10;
 
 const char *WIFI_SSID = "TG862G72";
 const char *WIFI_PASS = "72367236";
+// const char *WIFI_SSID = "Tarna55";
+// const char *WIFI_PASS = "uweyuwey";
 
 String hostname = "Eitan's ESP32";
 
@@ -127,14 +129,14 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
       const char *connection = json["connection"];
       if (strcmp(connection, "ping") == 0)
       {
-        // const uint8_t size = JSON_OBJECT_SIZE(1);
-        // StaticJsonDocument<size> json;
-        // json["connection"] = "pong";
+        const uint8_t size = JSON_OBJECT_SIZE(1);
+        StaticJsonDocument<size> json;
+        json["connection"] = "pong";
 
-        // char data[17];
-        // size_t len = serializeJson(json, data);
+        char data[30];
+        size_t len = serializeJson(json, data);
 
-        // ws.textAll(data, len);
+        ws.textAll(data, len);
         Serial.println("ping request");
       }
     }
@@ -197,7 +199,7 @@ void initWebServer()
 void initWiFi()
 {
   WiFi.mode(WIFI_STA);
-  WiFi.hostname(hostname.c_str());
+  // WiFi.hostname(hostname.c_str());
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.printf("Trying to connect [%s] ", WiFi.macAddress().c_str());
   while (WiFi.status() != WL_CONNECTED)
@@ -207,10 +209,10 @@ void initWiFi()
   }
   Serial.printf(" %s\n", WiFi.localIP().toString().c_str());
 
-  if (!MDNS.begin("holamundo"))
-  {
-    Serial.println("Error starting mDNS");
-  }
+  // if (!MDNS.begin("holamundo"))
+  // {
+  //   Serial.println("Error starting mDNS");
+  // }
 }
 
 void initSPIFFS()
@@ -226,6 +228,32 @@ void initSPIFFS()
   }
 }
 
+void wifiScan () {
+
+  Serial.println("Starting WiFi scan");
+
+  int n = WiFi.scanNetworks();
+  Serial.println("scan done");
+   if (n == 0) {
+        Serial.println("no networks found");
+    } else {
+        Serial.print(n);
+        Serial.println(" networks found");
+        for (int i = 0; i < n; ++i) {
+            // Print SSID and RSSI for each network found
+            Serial.print(i + 1);
+            Serial.print(": ");
+            Serial.print(WiFi.SSID(i));
+            Serial.print(" (");
+            Serial.print(WiFi.RSSI(i));
+            Serial.print(")");
+            Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
+            delay(10);
+        }
+    }
+
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -235,6 +263,7 @@ void setup()
   pinMode(led.pin, OUTPUT);
   pinMode(button.pin, INPUT_PULLUP);
   initSPIFFS();
+  wifiScan();
   initWiFi();
   initWebSocket();
   initWebServer();
